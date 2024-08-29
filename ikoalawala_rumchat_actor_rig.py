@@ -16,11 +16,15 @@ import time
 import openai
 import rumchat_actor
 
-#Static data for this rig
 class Static:
+    """Static data for this rig"""
 
-    #Data relating to Rumble
+    #Text encoding to use when opening and saving files
+    text_encoding = "utf-8"
+
     class Rumble:
+        """Data relating to Rumble"""
+
         #Rumble API url with key. Should be loaded from an environment variable or file. TODO
         api_url = None
 
@@ -28,8 +32,8 @@ class Static:
         username = "iKoalaWala"
         password = None
 
-    #Data relating to OpenAI and the LLM bot
-    class OpenAI_LLM:
+    class LLM:
+        """Data relating to OpenAI and the LLM bot"""
 
         #OpenAI API key. Should be loaded from an environment variable or file. TODO
         api_key = None
@@ -49,7 +53,7 @@ class Static:
 
         #Livestream behavior prompt
         livestream_behavior_prompt = "You are staff in a livestream chat, operating under the username {actor.username}. Keep your responses brief and polite. " + \
-            f"Your messages have a {rumchat_actor.static.Message.effective_max_len)} character limit." + \
+            f"Your messages have a {rumchat_actor.static.Message.effective_max_len} character limit." + \
                 "The user will give you information on what is happening, and you should return the message you would send in response. " + \
                     "Only return the message itself."
 
@@ -65,8 +69,8 @@ class Static:
         #User said something, respond prompt
         user_respond_prompt = "The user {message.user.username} says the following to you:\n---\n{message.text}\n---\nWrite a short response, pinging them with @{username} somewhere in the message."
 
-    #Data relating to the clip command
     class Clip:
+        """Data relating to the clip command"""
 
         #Default clip length
         default_len = 60
@@ -75,13 +79,13 @@ class Static:
         max_len = 60 * 5
 
         #Folder to save clips in
-        save_path = os.path.expanduser("~") + os.sep() + "Videos"
+        save_path = os.path.expanduser("~") + os.sep + "Videos"
 
         #Location to look for the OBS recording
-        recording_path = os.path.expanduser("~") + os.sep() + "Videos"
+        recording_path = os.path.expanduser("~") + os.sep + "Videos"
 
 #Set the API key
-openai.api_key = Static.OpenAI_LLM.api_key
+openai.api_key = Static.LLM.api_key
 
 class LLMChatBot:
     """LLM chat bot according to iKoalaWala's specifications"""
@@ -96,11 +100,11 @@ class LLMChatBot:
         self.client = openai.OpenAI()
 
         #Load remembered user list, if it exists
-        if os.path.exists(Static.OpenAI_LLM.remembered_users_fn):
-            with open(Static.OpenAI_LLM.remembered_users_fn) as f:
+        if os.path.exists(Static.LLM.remembered_users_fn):
+            with open(Static.LLM.remembered_users_fn, encoding = Static.text_encoding) as f:
                 self.remembered_users = f.read().strip().splitlines()
 
-    def action(self, message, actor):
+    def action(self, message, _):
         """Message action to be registered"""
 
         #Do not run the LLM on flagged messages
@@ -114,7 +118,7 @@ class LLMChatBot:
 
         #The user pinged us, generate a response to their message
         if message.text.startswith(f"@{self.actor.username}"):
-            reply = self.get_llm_message(Static.OpenAI_LLM.user_respond_prompt.format(message))
+            reply = self.get_llm_message(Static.LLM.user_respond_prompt.format(message))
             if reply:
                 self.actor.send_message(reply)
 
@@ -135,14 +139,14 @@ class LLMChatBot:
 
         #User was not remembered, make note
         self.remembered_users.append(username)
-        with open(Static.OpenAI_LLM.remembered_users_fn, "a") as f:
+        with open(Static.LLM.remembered_users_fn, "a", encoding = Static.text_encoding) as f:
             f.write("\n" + username)
         return False
 
     def greet_user(self, username):
         """Greet a first-time chatting user"""
-        Static.OpenAI_LLM.user_welcome_prompt.format(username = username)
-        message = self.get_llm_message(Static.OpenAI_LLM.user_welcome_prompt.format(username = username))
+        Static.LLM.user_welcome_prompt.format(username = username)
+        message = self.get_llm_message(Static.LLM.user_welcome_prompt.format(username = username))
         if not message: #Getting a message failed
             return
         self.actor.send_message(message)
@@ -150,24 +154,24 @@ class LLMChatBot:
     @property
     def current_character(self):
         """The current index of character prompts to use"""
-        return (time.time() % (Static.OpenAI_LLM.character_season_length * len(Static.OpenAI_LLM.character_prompts))) // Static.OpenAI_LLM.character_season_length
+        return (time.time() % (Static.LLM.character_season_length * len(Static.LLM.character_prompts))) // Static.LLM.character_season_length
 
     @property
     def current_system_prompt(self):
         """The current system LLM prompt, as defined by the current character"""
-        return Static.OpenAI_LLM.livestream_behavior_prompt.format(actor = self.actor) + " " + Static.OpenAI_LLM.character_prompts[self.current_character]
+        return Static.LLM.livestream_behavior_prompt.format(actor = self.actor) + " " + Static.LLM.character_prompts[self.current_character]
 
     def get_llm_message(self, prompt):
         """Get an LLM response to a prompt"""
         response = self.client.chat.completions.create(
-        model = Static.OpenAI_LLM.gpt_model,
+        model = Static.LLM.gpt_model,
         messages=[
             {"role": "system", "content": self.current_system_prompt},
             {"role": "user", "content": prompt},
         ]
         )
         try:
-            text = response["choices"][0]["message"]["content"]
+            text = response.choices[0].message.content
         except Exception as e:
             print("LLM error:", e)
             print(response)
