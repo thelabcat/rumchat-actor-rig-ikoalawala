@@ -7,6 +7,8 @@
     - Welcomes newcomers
     - Can be triggered to diss mutes
 - ClipRecordingCommand
+- Killswitch command
+- Help command
 
 S.D.G."""
 
