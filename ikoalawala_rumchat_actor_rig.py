@@ -28,18 +28,18 @@ class Static:
         """Data relating to Rumble"""
 
         #Rumble API url with key. Should be loaded from an environment variable or file. TODO
-        with open("rumble_api_url.txt") as f:
+        with open("rumble_api_url.txt", encoding = Static.text_encoding) as f:
             api_url = f.read().strip()
 
         #User login credentials. Password should be loaded from an environment variable or file. TODO
-        with open("rumble_account_credentials.txt") as f:
+        with open("rumble_account_credentials.txt", encoding = Static.text_encoding) as f:
             username, password = f.read().splitlines()[:2]
 
     class LLM:
         """Data relating to OpenAI and the LLM bot"""
 
         #OpenAI API key. Should be loaded from an environment variable or file. TODO
-        with open("openai_api_key.txt") as f:
+        with open("openai_api_key.txt", encoding = Static.text_encoding) as f:
             api_key = f.read().strip()
 
         #GPT model of choice
