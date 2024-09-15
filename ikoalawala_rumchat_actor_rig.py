@@ -47,9 +47,9 @@ class Static:
 
         #Prompts for each character the LLM will use. TODO
         character_prompts = [
-            "You are the character Moe.",
-            "You are the character Larry.",
-            "You are the character Curly.",
+            "You are the character Radshak.",
+            "You are the character Meshack.",
+            "You are the character Abednigo.",
             ]
 
         #Time a character is in action in seconds
