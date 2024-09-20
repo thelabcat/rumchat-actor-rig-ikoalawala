@@ -108,6 +108,10 @@ class LLMChatBot:
             with open(Static.LLM.remembered_users_fn, encoding = TEXT_ENCODING) as f:
                 self.remembered_users = f.read().strip().splitlines()
 
+        #Otherwise, create the remembered users list as blank
+        else:
+            self.remembered_users = []
+
     def action(self, message, _):
         """Message action to be registered"""
 
