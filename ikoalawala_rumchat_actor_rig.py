@@ -18,28 +18,28 @@ import time
 import openai
 import rumchat_actor
 
+#Text encoding to use when opening and saving files
+TEXT_ENCODING = "utf-8"
+
 class Static:
     """Static data for this rig"""
-
-    #Text encoding to use when opening and saving files
-    text_encoding = "utf-8"
 
     class Rumble:
         """Data relating to Rumble"""
 
-        #Rumble API url with key. Should be loaded from an environment variable or file. TODO
-        with open("rumble_api_url.txt", encoding = Static.text_encoding) as f:
+        #Rumble API url with key. Should be loaded from an environment variable or file.
+        with open("rumble_api_url.txt", encoding = TEXT_ENCODING) as f:
             api_url = f.read().strip()
 
-        #User login credentials. Password should be loaded from an environment variable or file. TODO
-        with open("rumble_account_credentials.txt", encoding = Static.text_encoding) as f:
+        #User login credentials. Password should be loaded from an environment variable or file.
+        with open("rumble_account_credentials.txt", encoding = TEXT_ENCODING) as f:
             username, password = f.read().splitlines()[:2]
 
     class LLM:
         """Data relating to OpenAI and the LLM bot"""
 
-        #OpenAI API key. Should be loaded from an environment variable or file. TODO
-        with open("openai_api_key.txt", encoding = Static.text_encoding) as f:
+        #OpenAI API key. Should be loaded from an environment variable or file.
+        with open("openai_api_key.txt", encoding = TEXT_ENCODING) as f:
             api_key = f.read().strip()
 
         #GPT model of choice
@@ -105,7 +105,7 @@ class LLMChatBot:
 
         #Load remembered user list, if it exists
         if os.path.exists(Static.LLM.remembered_users_fn):
-            with open(Static.LLM.remembered_users_fn, encoding = Static.text_encoding) as f:
+            with open(Static.LLM.remembered_users_fn, encoding = TEXT_ENCODING) as f:
                 self.remembered_users = f.read().strip().splitlines()
 
     def action(self, message, _):
@@ -143,7 +143,7 @@ class LLMChatBot:
 
         #User was not remembered, make note
         self.remembered_users.append(username)
-        with open(Static.LLM.remembered_users_fn, "a", encoding = Static.text_encoding) as f:
+        with open(Static.LLM.remembered_users_fn, "a", encoding = TEXT_ENCODING) as f:
             f.write("\n" + username)
         return False
 
