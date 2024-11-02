@@ -194,7 +194,7 @@ class LLMChatBot:
 
 #Initialize the actor
 print("Initializing actor")
-actor = rumchat_actor.RumbleChatActor(api_url = Static.Rumble.api_url, username = Static.Rumble.username, password = Static.Rumble.password)
+actor = rumchat_actor.RumbleChatActor(api_url = Static.Rumble.api_url, username = Static.Rumble.username, password = Static.Rumble.password, browser_head = True, init_message = time.strftime('%a %d %b %Y, %I:%M%p'))
 
 #Register the LLM chat bot
 print("Initializing LLM chat bot")
