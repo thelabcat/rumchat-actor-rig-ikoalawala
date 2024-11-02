@@ -144,7 +144,13 @@ class LLMChatBot:
         """Process messages one at a time"""
         #While the actor is alive and we are not permanently rate limited
         while self.actor.keep_running and not self.permanent_rate_limit:
-            message = self.messages_to_process.get()
+
+            #Wait for a new message to process, checking the loop condition frequently
+            try:
+                message = self.messages_to_process.get_nowait()
+            except queue.Empty:
+                time.sleep(0.1)
+                continue
 
             #Do not run the LLM on flagged messages
             if not self.is_clean(message.user.username + " said, " + message.text):
