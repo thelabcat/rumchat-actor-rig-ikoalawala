@@ -203,16 +203,16 @@ print("Registering chat bot")
 actor.register_message_action(llmcb)
 
 #Clip command
-#print("Initializing clip command.")
-#clip_command = rumchat_actor.commands.ClipRecordingCommand(
-    actor = actor,
-    default_duration = Static.Clip.default_len,
-    max_duration = Static.Clip.max_len,
-    recording_load_path = Static.Clip.recording_path,
-    clip_save_path = Static.Clip.save_path,
-    )
-#print("Registering clip command")
-#actor.register_command(clip_command)
+# print("Initializing clip command.")
+# clip_command = rumchat_actor.commands.ClipRecordingCommand(
+#     actor = actor,
+#     default_duration = Static.Clip.default_len,
+#     max_duration = Static.Clip.max_len,
+#     recording_load_path = Static.Clip.recording_path,
+#     clip_save_path = Static.Clip.save_path,
+#     )
+# print("Registering clip command")
+# actor.register_command(clip_command)
 
 #Killswitch command
 print("Registering killswitch command")
