@@ -14,7 +14,9 @@ S.D.G."""
 
 import os
 from pathlib import Path
+import threading
 import time
+import queue
 import openai
 import rumchat_actor
 
@@ -41,6 +43,15 @@ class Static:
         #OpenAI API key. Should be loaded from an environment variable or file.
         with open("openai_api_key.txt", encoding = TEXT_ENCODING) as f:
             api_key = f.read().strip()
+
+        #Delay between tries if a rate limit error is reached
+        rate_limit_delay = 20
+
+        #Max number of tries before giving up on avoiding a rate limit
+        rate_limit_max_tries = 4
+
+        #Response to give when rate limited
+        rate_limited_response = "Sorry, @{message.user.username}, I'm exhausted. Try again next live stream."
 
         #GPT model of choice
         gpt_model = "gpt-4o"
@@ -113,27 +124,80 @@ class LLMChatBot:
         else:
             self.remembered_users = []
 
+        #Wether or not we have been rate limited for the day / entire livestream
+        self.permanent_rate_limit = False
+
+        self.messages_to_process = queue.Queue()
+
+        self.message_processor_thread = threading.Thread(target = self.message_processing_loop)
+        self.message_processor_thread.start()
+
     def action(self, message, _):
         """Message action to be registered"""
 
-        #Do not run the LLM on flagged messages
-        if not (self.is_clean(message.user.username) and self.is_clean(message.text)):
+        if self.permanent_rate_limit:
             return
 
-        #This is a new user, greet them
-        if not self.remember_user(message.user.username):
-            self.greet_user(message.user.username)
+        self.messages_to_process.put(message)
+
+    def message_processing_loop(self):
+        """Process messages one at a time"""
+        #While the actor is alive and we are not permanently rate limited
+        while self.actor.keep_running and not self.permanent_rate_limit:
+            message = self.messages_to_process.get()
+
+            #Do not run the LLM on flagged messages
+            if not self.is_clean(message.user.username + " said, " + message.text):
+                return
+
+            #This is a new user, greet them
+            if not self.remember_user(message.user.username):
+                self.greet_user(message.user.username)
+                return
+
+            #The user pinged us, generate a response to their message
+            if message.text.startswith(f"@{self.actor.username}"):
+                reply = self.get_llm_message(Static.LLM.user_respond_prompt.format(message))
+                if reply:
+                    self.actor.send_message(reply)
+                elif self.permanent_rate_limit:
+                    self.actor.send_message(Static.LLM.rate_limited_response.format(message))
+
+        print("LLM chat bot message processor shut down.")
+
+    def _run_rate_limited(self, call):
+        """Run a callable with OpenAI rate limiting catch"""
+        #We have already been permanently rate limited
+        if self.permanent_rate_limit:
             return
 
-        #The user pinged us, generate a response to their message
-        if message.text.startswith(f"@{self.actor.username}"):
-            reply = self.get_llm_message(Static.LLM.user_respond_prompt.format(message))
-            if reply:
-                self.actor.send_message(reply)
+        #We were not yet rate limited in this try
+        rate_limited = False
+
+        #Try a few times
+        for _ in range(Static.LLM.rate_limit_max_tries):
+            #If we were rate limited, wait
+            if rate_limited:
+                time.sleep(Static.LLM.rate_limit_delay)
+
+            #Try to get a result
+            try:
+                return call()
+
+            #We were rate limited
+            except openai.RateLimitError:
+                rate_limited = True
+
+        #We ran out of tries
+        self.permanent_rate_limit = True
 
     def is_clean(self, expression):
+        """Use OpenAI moderation to check if something is clean or not (rate limit check)"""
+        return self._run_rate_limited(lambda: self._is_clean(expression))
+
+    def _is_clean(self, expression):
         """Use OpenAI moderation to check if something is clean or not"""
-        moderation_response = self.client.moderations.create(input=expression)
+        moderation_response = self.client.moderations.create(input = expression)
         flagged = moderation_response.results[0].flagged
         return not flagged
 
@@ -174,6 +238,10 @@ class LLMChatBot:
         return Static.LLM.livestream_behavior_prompt.format(actor = self.actor) + " " + Static.LLM.character_prompts[self.current_character]
 
     def get_llm_message(self, prompt):
+        """Get an LLM response to a prompt (rate limit check)"""
+        return self._run_rate_limited(lambda: self._get_llm_message(prompt))
+
+    def _get_llm_message(self, prompt):
         """Get an LLM response to a prompt"""
         print("Getting LLM response to prompt")
         response = self.client.chat.completions.create(
@@ -188,6 +256,8 @@ class LLMChatBot:
         except Exception as e:
             print("LLM error:", e)
             print(response)
+            if isinstance(e, openai.RateLimitError):
+                raise
             return
 
         return text
