@@ -109,6 +109,10 @@ class LLMChatBot:
             with open(Static.LLM.remembered_users_fn, encoding = TEXT_ENCODING) as f:
                 self.remembered_users = f.read().strip().splitlines()
 
+        #Otherwise, create the remembered users list as blank
+        else:
+            self.remembered_users = []
+
     def action(self, message, _):
         """Message action to be registered"""
 
@@ -143,6 +147,7 @@ class LLMChatBot:
             return True
 
         #User was not remembered, make note
+        print("New user", username)
         self.remembered_users.append(username)
         with open(Static.LLM.remembered_users_fn, "a", encoding = TEXT_ENCODING) as f:
             f.write("\n" + username)
@@ -150,9 +155,11 @@ class LLMChatBot:
 
     def greet_user(self, username):
         """Greet a first-time chatting user"""
+        print("Greeting", username)
         Static.LLM.user_welcome_prompt.format(username = username)
         message = self.get_llm_message(Static.LLM.user_welcome_prompt.format(username = username))
         if not message: #Getting a message failed
+            print("Message generation failed.")
             return
         self.actor.send_message(message)
 
@@ -168,6 +175,7 @@ class LLMChatBot:
 
     def get_llm_message(self, prompt):
         """Get an LLM response to a prompt"""
+        print("Getting LLM response to prompt")
         response = self.client.chat.completions.create(
         model = Static.LLM.gpt_model,
         messages=[
@@ -185,13 +193,17 @@ class LLMChatBot:
         return text
 
 #Initialize the actor
+print("Initializing actor")
 actor = rumchat_actor.RumbleChatActor(api_url = Static.Rumble.api_url, username = Static.Rumble.username, password = Static.Rumble.password)
 
 #Register the LLM chat bot
+print("Initializing LLM chat bot")
 llmcb = LLMChatBot(actor)
+print("Registering chat bot")
 actor.register_message_action(llmcb)
 
 #Clip command
+print("Initializing clip command.")
 clip_command = rumchat_actor.commands.ClipRecordingCommand(
     actor = actor,
     default_duration = Static.Clip.default_len,
@@ -199,12 +211,15 @@ clip_command = rumchat_actor.commands.ClipRecordingCommand(
     recording_load_path = Static.Clip.recording_path,
     clip_save_path = Static.Clip.save_path,
     )
+print("Registering clip command")
 actor.register_command(clip_command)
 
 #Killswitch command
+print("Registering killswitch command")
 actor.register_command(rumchat_actor.commands.KillswitchCommand(actor = actor))
 
 #Help command
+print("Registering help command")
 actor.register_command(rumchat_actor.commands.HelpCommand(actor = actor))
 
 print("Starting mainloop...")
