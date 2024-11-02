@@ -89,7 +89,8 @@ class Static:
         recording_path = os.path.expanduser("~") + os.sep + "Videos"
 
 #Set the API key
-openai.api_key = Static.LLM.api_key
+#DEPRECATED
+#openai.api_key = Static.LLM.api_key
 
 class LLMChatBot:
     """LLM chat bot according to iKoalaWala's specifications"""
@@ -101,7 +102,7 @@ class LLMChatBot:
         self.actor = actor
 
         #Create OpenAI client
-        self.client = openai.OpenAI()
+        self.client = openai.OpenAI(api_key = Static.LLM.api_key)
 
         #Load remembered user list, if it exists
         if os.path.exists(Static.LLM.remembered_users_fn):
