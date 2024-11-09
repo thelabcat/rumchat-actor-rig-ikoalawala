@@ -93,11 +93,8 @@ class Static:
         #Max clip length
         max_len = 60 * 5
 
-        #Folder to save clips in
+        #Folder that replay buffer clips are saved to
         save_path = os.path.expanduser("~") + os.sep + "Videos"
-
-        #Location to look for the OBS recording
-        recording_path = os.path.expanduser("~") + os.sep + "Videos"
 
 #Set the API key
 #DEPRECATED
@@ -279,16 +276,24 @@ print("Registering chat bot")
 actor.register_message_action(llmcb)
 
 #Clip command
-# print("Initializing clip command.")
-# clip_command = rumchat_actor.commands.ClipRecordingCommand(
-#     actor = actor,
-#     default_duration = Static.Clip.default_len,
-#     max_duration = Static.Clip.max_len,
-#     recording_load_path = Static.Clip.recording_path,
-#     clip_save_path = Static.Clip.save_path,
-#     )
-# print("Registering clip command")
-# actor.register_command(clip_command)
+print("Initializing clip command.")
+clip_command = rumchat_actor.commands.ClipReplayBufferCommand(
+    actor = actor,
+    clip_save_path = Static.Clip.save_path,
+    )
+print("Registering clip command")
+actor.register_command(clip_command)
+
+#Clip uploader
+print("Initializing clip uploader")
+clip_uploader = rumchat_actor.misc.ClipUploader(
+    actor,
+    clip_command,
+    #channel_id = "iKoalaWala Clips", #Channel must exist
+    username = Static.Rumble.username,
+    password = Static.Rumble.password,
+    browser_head = True,
+    )
 
 #Killswitch command
 print("Registering killswitch command")
