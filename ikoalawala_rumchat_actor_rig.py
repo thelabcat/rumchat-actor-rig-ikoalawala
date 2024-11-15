@@ -94,7 +94,7 @@ class Static:
         #max_len = 60 * 5
 
         #Folder that replay buffer clips are saved to
-        save_path = os.path.join(os.path.expanduser("~"), "Videos", "New Recordings")
+        save_path = os.path.join(os.path.expanduser("~"), "Desktop", "New Recordings")
 
         #OBS clipping hotkey
         obs_hotkey = ["\\"]
