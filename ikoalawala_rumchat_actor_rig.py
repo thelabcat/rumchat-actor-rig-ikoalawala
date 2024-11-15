@@ -56,12 +56,9 @@ class Static:
         #GPT model of choice
         gpt_model = "gpt-4o"
 
-        #Prompts for each character the LLM will use. TODO
-        character_prompts = [
-            "You are the character Radshak.",
-            "You are the character Meshack.",
-            "You are the character Abednigo.",
-            ]
+        #Prompts for each character the LLM will use.
+        with open("llm_character_prompts.txt", encoding = TEXT_ENCODING) as f:
+            character_prompts = f.read().strip().splitlines()
 
         #Time a character is in action in seconds
         character_season_length = 600
