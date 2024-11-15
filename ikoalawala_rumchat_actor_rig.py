@@ -94,7 +94,10 @@ class Static:
         max_len = 60 * 5
 
         #Folder that replay buffer clips are saved to
-        save_path = os.path.expanduser("~") + os.sep + "Videos"
+        save_path = os.path.join(os.path.expanduser("~"), "Videos", "New Recordings")
+
+        #OBS clipping hotkey
+        obs_hotkey = ["\\"]
 
 #Set the API key
 #DEPRECATED
@@ -280,6 +283,7 @@ print("Initializing clip command.")
 clip_command = rumchat_actor.commands.ClipReplayBufferCommand(
     actor = actor,
     clip_save_path = Static.Clip.save_path,
+    obs_hotkey = Static.Clip.obs_hotkey,
     )
 print("Registering clip command")
 actor.register_command(clip_command)
