@@ -6,7 +6,7 @@
     - Cycles through three characters on a seasonal timer
     - Welcomes newcomers
     - Can be triggered to diss mutes
-- ClipRecordingCommand
+- Clip command
 - Killswitch command
 - Help command
 
@@ -79,7 +79,7 @@ class Static:
         user_welcome_prompt = "A user named {username} has entered the livestream chat. You do not remember ever seeing them before, though they may have been here sometime before you became staff. Write a short welcome, pinging them with @{username} somewhere in the message."
 
         #Message too long response, currently unused
-        too_long_response = "That's too long. Please make it briefer."
+        #too_long_response = "That's too long. Please make it briefer."
 
         #User said something, respond prompt
         user_respond_prompt = "The user {message.user.username} says the following to you:\n---\n{message.text}\n---\nWrite a short response, pinging them with @{username} somewhere in the message."
@@ -87,18 +87,14 @@ class Static:
     class Clip:
         """Data relating to the clip command"""
 
-        #Default clip length
-        default_len = 60
+        #Default clip length, currently unused
+        #default_len = 60
 
-        #Max clip length
-        max_len = 60 * 5
+        #Max clip length, currently unused
+        #max_len = 60 * 5
 
         #Folder that replay buffer clips are saved to
         save_path = os.path.expanduser("~") + os.sep + "Videos"
-
-#Set the API key
-#DEPRECATED
-#openai.api_key = Static.LLM.api_key
 
 class LLMChatBot:
     """LLM chat bot according to iKoalaWala's specifications"""
@@ -139,8 +135,8 @@ class LLMChatBot:
 
     def message_processing_loop(self):
         """Process messages one at a time"""
-        #While the actor is alive and we are not permanently rate limited
-        while self.actor.keep_running and not self.permanent_rate_limit:
+        #While the actor is alive
+        while self.actor.keep_running:
 
             #Wait for a new message to process, checking the loop condition frequently
             try:
