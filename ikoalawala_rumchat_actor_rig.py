@@ -45,7 +45,7 @@ class Static:
             api_key = f.read().strip()
 
         #Delay between tries if a rate limit error is reached
-        rate_limit_delay = 20
+        rate_limit_delay = 23
 
         #Max number of tries before giving up on avoiding a rate limit
         rate_limit_max_tries = 4
@@ -130,10 +130,6 @@ class LLMChatBot:
 
     def action(self, message, _):
         """Message action to be registered"""
-
-        if self.permanent_rate_limit:
-            return
-
         self.messages_to_process.put(message)
 
     def message_processing_loop(self):
@@ -148,22 +144,30 @@ class LLMChatBot:
                 time.sleep(0.1)
                 continue
 
-            #Do not run the LLM on flagged messages
-            if not self.is_clean(message.user.username + " said, " + message.text):
-                return
-
             #This is a new user, greet them
-            if not self.remember_user(message.user.username):
+            if not self.remember_user(message.user.username) \
+                and self.is_clean(message.user.username + " said, " + message.text):
+
                 self.greet_user(message.user.username)
-                return
+                continue
 
             #The user pinged us, generate a response to their message
             if message.text.startswith(f"@{self.actor.username}"):
-                reply = self.get_llm_message(Static.LLM.user_respond_prompt.format(message))
-                if reply:
-                    self.actor.send_message(reply)
-                elif self.permanent_rate_limit:
+                #Get message cleanliness (WARNING: defaults to False if rate limited)
+                clean = self.is_clean(message.user.username + " said, " + message.text)
+
+                #The message and username were clean
+                if clean:
+                    reply = self.get_llm_message(Static.LLM.user_respond_prompt.format(message))
+                    #We have a reply, send it and finish with this message
+                    if reply:
+                        self.actor.send_message(reply)
+                        continue
+
+                #We cannot respond because we are rate limited (before or after trying to generate a reply)
+                if self.permanent_rate_limit:
                     self.actor.send_message(Static.LLM.rate_limited_response.format(message))
+                    continue
 
         print("LLM chat bot message processor shut down.")
 
