@@ -155,7 +155,7 @@ class LLMChatBot:
 
                 #The message and username were clean
                 if clean:
-                    reply = self.get_llm_message(Static.LLM.user_respond_prompt.format(message))
+                    reply = self.get_llm_message(Static.LLM.user_respond_prompt.format(message = message))
                     #We have a reply, send it and finish with this message
                     if reply:
                         self.actor.send_message(reply)
@@ -163,7 +163,7 @@ class LLMChatBot:
 
                 #We cannot respond because we are rate limited (before or after trying to generate a reply)
                 if self.permanent_rate_limit:
-                    self.actor.send_message(Static.LLM.rate_limited_response.format(message))
+                    self.actor.send_message(Static.LLM.rate_limited_response.format(message = message))
                     continue
 
         print("LLM chat bot message processor shut down.")
