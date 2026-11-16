@@ -12,7 +12,6 @@
 
 S.D.G."""
 
-import os
 from pathlib import Path
 import threading
 import time
@@ -73,7 +72,7 @@ class Static:
                     "Only return the message itself."
 
         #User memory file location
-        remembered_users_fn = os.path.join(Path(__file__).parent, "remembered_users.txt")
+        remembered_users_fn = Path(__file__).parent / "remembered_users.txt"
 
         #User welcome prompt
         user_welcome_prompt = "A user named {username} has entered the livestream chat. You do not remember ever seeing them before, though they may have been here sometime before you became staff. Write a short welcome, pinging them with @{username} somewhere in the message."
@@ -94,7 +93,7 @@ class Static:
         #max_len = 60 * 5
 
         #Folder that replay buffer clips are saved to
-        save_path = os.path.join(os.path.expanduser("~"), "Desktop", "New Recordings")
+        save_path = Path.home() / "Desktop" / "New Recordings"
 
         #OBS clipping hotkey
         obs_hotkey = ["\\"]
@@ -112,7 +111,7 @@ class LLMChatBot:
         self.client = openai.OpenAI(api_key = Static.LLM.api_key)
 
         #Load remembered user list, if it exists
-        if os.path.exists(Static.LLM.remembered_users_fn):
+        if Static.LLM.remembered_users_fn.exists():
             with open(Static.LLM.remembered_users_fn, encoding = TEXT_ENCODING) as f:
                 self.remembered_users = f.read().strip().splitlines()
 
@@ -278,7 +277,7 @@ actor.register_message_action(llmcb)
 print("Initializing clip command.")
 clip_command = rumchat_actor.commands.ClipReplayBufferCommand(
     actor = actor,
-    clip_save_path = Static.Clip.save_path,
+    clip_save_path = str(Static.Clip.save_path),
     obs_hotkey = Static.Clip.obs_hotkey,
     )
 print("Registering clip command")
