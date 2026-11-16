@@ -143,9 +143,8 @@ class LLMChatBot:
 
             #Wait for a new message to process, checking the loop condition frequently
             try:
-                message = self.messages_to_process.get_nowait()
+                message = self.messages_to_process.get(timeout = 0.1)
             except queue.Empty:
-                time.sleep(0.1)
                 continue
 
             #Do not run the LLM on flagged messages
